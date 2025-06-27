@@ -1,0 +1,1416 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>温馨聊天室</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(120deg, #fccb90 0%, #d57eeb 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            background-image: url('https://example.com/friendly-background.png');
+            background-size: cover;
+            background-attachment: fixed;
+        }
+
+        .chat-container {
+            position: relative;
+            border-radius: 15px;
+            padding: 20px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 背景图设置 */
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            position: relative;
+            background: url('logo.jpg') center center/400px no-repeat;
+            background-attachment: fixed;
+            background-color: white;
+        }
+
+        /* 半透明遮罩 */
+        .chat-messages::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.85);
+        }
+
+        /* 深色模式 */
+        [data-theme="dark"] .chat-messages {
+            background: url('logo.jpg') center center/400px no-repeat;
+            background-attachment: fixed;
+            background-color: rgb(30, 30, 30);
+        }
+
+        [data-theme="dark"] .chat-messages::before {
+            background-color: rgba(30, 30, 30, 0.85);
+        }
+
+        /* 确保消息内容在最上层 */
+        .message {
+            position: relative;
+            z-index: 1;
+        }
+
+        .message {
+            margin: 15px 0;
+            padding: 15px 20px;
+            border-radius: 20px;
+            max-width: 70%;
+            position: relative;
+            animation: bounceIn 0.5s ease-in-out;
+        }
+
+        .user-message {
+            background: linear-gradient(135deg, #FF6B6B, #FFE66D);
+            color: white;
+            margin-left: auto;
+            border-bottom-right-radius: 5px;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.2);
+        }
+
+        .agent-message {
+            background: linear-gradient(135deg, #A8E6CF, #DCEDC1);
+            color: #2d3436;
+            border-bottom-left-radius: 5px;
+            box-shadow: 0 4px 15px rgba(168, 230, 207, 0.2);
+        }
+
+        .input-area {
+            display: flex;
+            gap: 15px;
+            padding: 15px;
+            background: rgba(255, 255,255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        #messageInput {
+            flex: 1;
+            padding: 15px 20px;
+            border: 3px solid #FFE66D;
+            border-radius: 15px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: rgba(255, 255,255, 0.9);
+        }
+
+        #messageInput:focus {
+            outline: none;
+            border-color: #FF6B6B;
+            box-shadow: 0 0 0 4px rgba(255, 107, 107, 0.2);
+        }
+
+        button {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #FF6B6B, #FFE66D);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.2);
+        }
+
+        button:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.3);
+        }
+
+        @keyframes bounceIn {
+            0% { opacity: 0; transform: scale(0.3); }
+            50% { transform: scale(1.05); }
+            70% { transform: scale(0.9); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        /* 添加装饰性元素 */
+        .decoration {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            z-index: -1;
+        }
+
+        .decoration-1 {
+            top: 20px;
+            left: 20px;
+            background-image: url('https://example.com/decoration1.png');
+        }
+
+        .decoration-2 {
+            bottom: 20px;
+            right: 20px;
+            background-image: url('https://example.com/decoration2.png');
+        }
+
+        .main-container {
+            display: grid;
+            grid-template-columns: 250px 1fr 250px;
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .side-panel {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .left-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .profile-card {
+            text-align: center;
+            padding: 15px;
+            background: linear-gradient(135deg, #FFE66D, #FF6B6B);
+            border-radius: 15px;
+            color: white;
+        }
+
+        .profile-image {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            margin: 0 auto 10px;
+            border: 3px solid white;
+        }
+
+        .mood-board {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .mood-image {
+            width: 100%;
+            border-radius: 10px;
+            transition: transform 0.3s ease;
+        }
+
+        .mood-image:hover {
+            transform: scale(1.05);
+        }
+
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 250px;
+            box-sizing: border-box;
+        }
+
+        .daily-tips {
+            background: linear-gradient(135deg, #A8E6CF, #DCEDC1);
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 15px;
+        }
+
+        .achievement-board {
+            background: linear-gradient(135deg, #FFB7B7, #727272);
+            padding: 15px;
+            border-radius: 15px;
+            color: white;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .achievement-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0;
+        }
+
+        .achievement-icon {
+            width: 30px;
+            height: 30px;
+        }
+
+        .achievement-input {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+            width: 80%;
+        }
+
+        .achievement-input input {
+            flex: 1;
+            padding: 8px;
+            border: 2px solid #FFE66D;
+            border-radius: 10px;
+            font-size: 14px;
+            width: 128px;
+            max-width: 128px;
+            height: 35px;
+            box-sizing: border-box;
+        }
+
+        .achievement-input .add-btn {
+            padding: 8px 12px;
+            font-size: 14px;
+            white-space: nowrap;
+            min-width: 45px;
+            max-width: 50px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+
+        .achievement-input input {
+            height: 35px;
+            box-sizing: border-box;
+        }
+
+        .achievement-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .achievement-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .achievement-item:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .achievement-date {
+            font-size: 0.8em;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .delete-btn {
+            margin-left: auto;
+            padding: 4px 8px;
+            background: rgba(255, 107, 107, 0.3);
+            border: none;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .delete-btn:hover {
+            background: rgba(255, 107, 107, 0.5);
+        }
+
+        .mood-selector {
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .mood-selector span {
+            white-space: nowrap;
+            font-size: 14px;
+        }
+
+        .mood-selector select {
+            padding: 5px 10px;
+            border-radius: 8px;
+            border: 2px solid #FFE66D;
+            background: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .mood-selector select:hover {
+            border-color: #FF6B6B;
+        }
+
+        .date-calendar {
+            background: linear-gradient(135deg, #A8E6CF, #DCEDC1);
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            color: #2d3436;
+        }
+
+        .current-date {
+            text-align: center;
+        }
+
+        .time {
+            font-size: 2em;
+            font-weight: bold;
+            color: #FF6B6B;
+            margin-bottom: 5px;
+        }
+
+        .full-date {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .weekday {
+            color: #666;
+        }
+
+        .happy-moments {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 15px;
+            margin-top: 20px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .moment-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            width: 100%;
+        }
+
+        .moment-item {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+            width: 100%;
+            aspect-ratio: 1;
+        }
+
+        .moment-item img {
+            width: 100%;
+            height: calc(100% - 30px);
+            object-fit: cover;
+            display: block;
+        }
+
+        .moment-item p {
+            height: 30px;
+            padding: 5px;
+            margin: 0;
+            font-size: 12px;
+            text-align: center;
+            color: #666;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .upload-item {
+            border: 2px dashed #FFB7B7;
+            background: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .upload-label {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .upload-icon {
+            font-size: 2em;
+            color: #FF6B6B;
+            margin-bottom: 5px;
+        }
+
+        .upload-label p {
+            color: #666;
+            font-size: 12px;
+            margin: 0;
+        }
+
+        .upload-item:hover {
+            border-color: #FF6B6B;
+            background: rgba(255, 183,183, 0.1);
+        }
+
+        /* 主题切换按钮样式 */
+        .theme-switch {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+            cursor: pointer;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        .theme-label {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            color: #666;
+            font-size: 16px;
+            pointer-events: none;
+        }
+
+        input:checked + .slider {
+            background-color: #2196F3;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        /* 夜间模式样式 */
+        [data-theme="dark"] body {
+            background: linear-gradient(120deg, #2c3e50 0%, #3498db 100%);
+            color: #fff;
+        }
+
+        [data-theme="dark"] .chat-container {
+            background: rgba(30, 30, 30, 0.95);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        [data-theme="dark"] .chat-container::before {
+            background: linear-gradient(90deg, #2c3e50 0%, #34495e 100%);
+        }
+
+        [data-theme="dark"] .chat-messages {
+            background: rgba(40, 40, 40, 0.9);
+        }
+
+        [data-theme="dark"] .user-message {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+        }
+
+        [data-theme="dark"] .agent-message {
+            background: linear-gradient(135deg, #2980b9, #3498db);
+            color: white;
+        }
+
+        [data-theme="dark"] .input-area {
+            background: rgba(40, 40, 40, 0.95);
+        }
+
+        [data-theme="dark"] #messageInput {
+            background: rgba(60, 60, 60, 0.9);
+            border-color: #3498db;
+            color: white;
+        }
+
+        [data-theme="dark"] button {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+        }
+
+        [data-theme="dark"] .side-panel {
+            background: rgba(40, 40, 40, 0.9);
+            color: white;
+        }
+
+        [data-theme="dark"] .profile-card {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+        }
+
+        [data-theme="dark"] .happy-moments {
+            background: rgba(40, 40, 40, 0.9);
+        }
+
+        [data-theme="dark"] .moment-item {
+            background: rgba(60, 60, 60, 0.9);
+        }
+
+        [data-theme="dark"] .moment-item p {
+            color: #fff;
+        }
+
+        [data-theme="dark"] .upload-item {
+            border-color: #3498db;
+            background: rgba(40, 40, 40, 0.5);
+        }
+
+        [data-theme="dark"] .upload-icon {
+            color: #3498db;
+        }
+
+        [data-theme="dark"] .date-calendar {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+        }
+
+        [data-theme="dark"] .daily-tips {
+            background: linear-gradient(135deg, #2980b9, #3498db);
+            color: white;
+        }
+
+        [data-theme="dark"] .achievement-board {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+        }
+
+        [data-theme="dark"] .achievement-input input {
+            background: rgba(60, 60, 60, 0.9);
+            border-color: #3498db;
+            color: white;
+        }
+
+        @media screen and (max-width: 768px) {
+            /* 修改按钮位置，避免遮挡 */
+            .panel-toggle {
+                bottom: 80px; /* 调整按钮位置，避开输入框 */
+            }
+
+            .input-area {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                padding: 10px;
+                background: inherit;
+                z-index: 2;
+                background-color: rgba(255, 255, 255, 0.95); /* 添加半透明背景 */
+            }
+
+            [data-theme="dark"] .input-area {
+                background-color: rgba(30, 30, 30, 0.95);
+            }
+
+            /* 修改侧边栏样式，使其可以操作 */
+            .side-panel {
+                position: fixed;
+                top: 0;
+                height: 100vh;
+                width: 85%;
+                max-width: 300px;
+                z-index: 999;
+                overflow-y: auto;
+                transition: transform 0.3s ease;
+                background-color: rgba(255, 255, 255, 0.95);
+                padding: 20px;
+                display: block; /* 改为 block */
+            }
+
+            [data-theme="dark"] .side-panel {
+                background-color: rgba(30, 30, 30, 0.95);
+            }
+
+            .left-panel {
+                left: 0;
+                transform: translateX(-100%);
+            }
+
+            .right-panel {
+                right: 0;
+                transform: translateX(100%);
+            }
+
+            .left-panel.show {
+                transform: translateX(0);
+            }
+
+            .right-panel.show {
+                transform: translateX(0);
+            }
+
+            /* 调整遮罩层 */
+            .overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 998;
+            }
+
+            .overlay.show {
+                display: block;
+            }
+
+            /* 调整聊天消息区域的高度 */
+            .chat-messages {
+                height: calc(100vh - 140px); /* 为底部按钮和输入框留出更多空间 */
+                padding-bottom: 70px; /* 确保最后的消息不被输入框遮挡 */
+            }
+        }
+
+        /* 更小屏幕的额外调整 */
+        @media screen and (max-width: 480px) {
+            .panel-toggle {
+                width: 45px;
+                height: 45px;
+                font-size: 18px;
+            }
+
+            .left-toggle {
+                left: 10px;
+            }
+
+            .right-toggle {
+                right: 10px;
+            }
+        }
+
+        /* 移动端适配 */
+        @media screen and (max-width: 768px) {
+            .chat-messages {
+                height: calc(100vh - 140px);
+                padding-bottom: 70px;
+                background: url('logo.jpg') center 40%/100% auto no-repeat;
+                background-attachment: fixed;
+            }
+
+            .chat-container {
+                height: 100vh;
+                width: 100%;
+                margin: 0;
+                border-radius: 0;
+                padding: 10px;
+            }
+        }
+
+        /* 更小屏幕的额外调整 */
+        @media screen and (max-width: 480px) {
+            .chat-messages {
+                height: calc(100vh - 120px);
+                background-size: contain;  /* 确保背景完整显示 */
+                background-position: center center;
+            }
+        }
+
+        /* 横屏模式的调整 */
+        @media screen and (max-width: 768px) and (orientation: landscape) {
+            .chat-messages {
+                height: calc(100vh - 100px);
+                background-size: contain;
+                background-position: center center;
+            }
+        }
+
+        /* 默认隐藏按钮 */
+        .panel-toggle {
+            display: none;
+        }
+
+        /* 只在移动端显示按钮 */
+        @media screen and (max-width: 768px) {
+            .panel-toggle {
+                display: flex;
+                position: fixed;
+                z-index: 1000;
+                background: linear-gradient(135deg, #FF6B6B, #FFE66D);
+                color: white;
+                border: none;
+                border-radius: 50%;
+                width: 50px;
+                height: 50px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+                cursor: pointer;
+                font-size: 20px;
+                
+                /* 添加以下属性确保内容居中 */
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 0; /* 移除内边距 */
+                line-height: 1; /* 确保文字垂直居中 */
+            }
+
+            [data-theme="dark"] .panel-toggle {
+                background: linear-gradient(135deg, #2c3e50, #3498db);
+            }
+        }
+
+        /* 更小屏幕的额外调整 */
+        @media screen and (max-width: 480px) {
+            .panel-toggle {
+                width: 40px;
+                height: 40px;
+                font-size: 16px;
+            }
+        }
+
+        /* 更新语音按钮样式 */
+        .voice-button {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4CAF50, #8BC34A);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 10px;
+            color: white;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            padding: 0; /* 确保图标居中 */
+        }
+
+        .voice-button:hover {
+            transform: scale(1.1);
+            background: linear-gradient(135deg, #45a049, #7cb342);
+        }
+
+        .voice-button:active {
+            transform: scale(0.95);
+        }
+
+        [data-theme="dark"] .voice-button {
+            background: linear-gradient(135deg, #2196F3, #03A9F4);
+        }
+
+        [data-theme="dark"] .voice-button:hover {
+            background: linear-gradient(135deg, #1e88e5, #039be5);
+        }
+
+        /* 调整消息布局以容纳按钮 */
+        .message-content {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .message-text {
+            flex: 1;
+        }
+
+        /* AI 回复的文字样式 */
+        .received .message-text {
+            font-size: 170px;     /* 与用户消息保持一致 */
+            color: #2c3e50;
+        }
+
+        /* 用户消息的文字样式 */
+        .sent .message-text {
+            font-size: 1700px;
+            color: #ffffff;
+        }
+
+        /* 深色模式下的文字颜色 */
+        [data-theme="dark"] .received .message-text {
+            color: #ecf0f1;
+        }
+
+        /* 移动端适配 */
+        @media screen and (max-width: 768px) {
+            .message-text,
+            .received .message-text,
+            .sent .message-text {
+                font-size: 16px;  /* 移动端稍微小一点 */
+            }
+        }
+
+        @media screen and (max-width: 480px) {
+            .message-text,
+            .received .message-text,
+            .sent .message-text {
+                font-size: 15px;  /* 更小屏幕上的字号 */
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="panel-toggle left-toggle" id="leftToggle">👤</button>
+    <button class="panel-toggle right-toggle" id="rightToggle">📋</button>
+    <div class="overlay" id="overlay"></div>
+
+    <div class="theme-switch">
+        <label class="switch">
+            <input type="checkbox" id="themeToggle">
+            <span class="slider round"></span>
+            <span class="theme-label">🌙</span>
+        </label>
+    </div>
+
+    <div class="main-container">
+        <!-- 左侧面板 -->
+        <div class="side-panel left-panel">
+            <div class="profile-card">
+                <img src="头像.png" alt="头像" class="profile-image">
+                <h3>小朋友</h3>
+                <div class="mood-selector">
+                    <span>今天心情：</span>
+                    <select id="moodSelect" onchange="changeMood()">
+                        <option value="开心">开心 😊</option>
+                        <option value="平静">平静 😌</option>
+                        <option value="难过">难过 😢</option>
+                        <option value="生气">生气 😠</option>
+                        <option value="兴奋">兴奋 🤩</option>
+                    </select>
+                </div>
+            </div>
+            <div class="happy-moments">
+                <h3>开心时刻记录</h3>
+                <div class="moment-grid">
+                    <!-- 上传按钮 -->
+                    <div class="moment-item upload-item">
+                        <label for="imageUpload" class="upload-label">
+                            <div class="upload-icon">+</div>
+                            <p>添加照片</p>
+                        </label>
+                        <input type="file" id="imageUpload" accept="image/*" style="display: none;">
+                    </div>
+                    <!-- 现有的照片 -->
+                    <div class="moment-item">
+                        <img src="一起玩耍.jpg" alt="开心时刻">
+                        <p contenteditable="true" class="moment-title">和朋友一起玩耍</p>
+                    </div>
+                    <div class="moment-item">
+                        <img src="一起画画.jpg" alt="开心时刻">
+                        <p contenteditable="true" class="moment-title">画画的时光</p>
+                    </div>
+                    <div class="moment-item">
+                        <img src="美味午餐.jpg" alt="开心时刻">
+                        <p contenteditable="true" class="moment-title">美味的午餐</p>
+                    </div>
+                    <div class="moment-item">
+                        <img src="户外探险.jpg" alt="开心时刻">
+                        <p contenteditable="true" class="moment-title">户外探险</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 中间聊天区域 -->
+        <div class="chat-container">
+            <div class="decoration decoration-1"></div>
+            <div class="decoration decoration-2"></div>
+            <div class="chat-messages" id="chatMessages"></div>
+            <div class="input-area">
+                <input type="text" id="messageInput" placeholder="和我说说话吧...">
+                <button onclick="sendMessage()">发送</button>
+            </div>
+        </div>
+
+        <!-- 右侧面板 -->
+        <div class="side-panel right-panel">
+            <div class="date-calendar">
+                <div class="current-date">
+                    <div class="time" id="currentTime"></div>
+                    <div class="date-info">
+                        <div class="full-date" id="fullDate"></div>
+                        <div class="weekday" id="weekday"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="daily-tips">
+                <h3>今日小贴士</h3>
+                <p>记得多喝水哦！</p>
+                <p>和小伙伴一起玩耍很开心呢！</p>
+            </div>
+            <div class="achievement-board">
+                <h3>成就墙</h3>
+                <div class="achievement-input">
+                    <input type="text" id="achievementInput" placeholder="记录一个新的成就...">
+                    <button onclick="addAchievement()" class="add-btn">添加</button>
+                </div>
+                <div id="achievementList" class="achievement-list">
+                    <!-- 成就会动态添加到这里 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const ws = new WebSocket('ws://localhost:8765'); // 根据你的WebSocket服务器地址修改
+        const chatMessages = document.getElementById('chatMessages');
+        const messageInput = document.getElementById('messageInput');
+
+        ws.onopen = () => {
+            appendMessage('你的好朋友小光', '上线啦！', 'agent-message');
+        };
+
+        ws.onmessage = (event) => {
+            appendMessage('小光', event.data, 'agent-message');
+        };
+
+        ws.onclose = () => {
+            appendMessage('你的好朋友小光', '下线了~', 'agent-message');
+        };
+
+        function sendMessage() {
+            const message = messageInput.value.trim();
+            if (message) {
+                ws.send(message);
+                appendMessage('我', message, 'user-message');
+                messageInput.value = '';
+            }
+        }
+
+        // 添加全局变量
+        let currentSpeech = null;
+        let isPaused = false;
+        let currentButton = null;
+        let speechQueue = []; // 存储分段后的文本
+        let currentIndex = 0; // 当前播放的段落索引
+
+        // 更新后的语音播放功能
+        function playText(text, button) {
+            // 如果是当前正在播放的语音
+            if (currentButton === button) {
+                if (isPaused) {
+                    window.speechSynthesis.resume();
+                    isPaused = false;
+                    button.textContent = '⏸️';
+                } else {
+                    window.speechSynthesis.pause();
+                    isPaused = true;
+                    button.textContent = '▶️';
+                }
+                return;
+            }
+
+            // 如果有其他语音在播放，先停止它
+            if (currentSpeech && currentButton) {
+                window.speechSynthesis.cancel();
+                currentButton.textContent = '🔊';
+            }
+
+            // 分段处理长文本
+            speechQueue = splitTextIntoChunks(text);
+            currentIndex = 0;
+            currentButton = button;
+            
+            // 开始播放第一段
+            playNextChunk(button);
+        }
+
+        // 分段处理文本
+        function splitTextIntoChunks(text) {
+            // 按句号、问号、感叹号分割，保留标点符号
+            const sentences = text.match(/[^。！？.!?]+[。！？.!?]+/g) || [text];
+            const chunks = [];
+            let currentChunk = '';
+
+            for (const sentence of sentences) {
+                if ((currentChunk + sentence).length > 200) { // 每段控制在200字以内
+                    if (currentChunk) chunks.push(currentChunk);
+                    currentChunk = sentence;
+                } else {
+                    currentChunk += sentence;
+                }
+            }
+            if (currentChunk) chunks.push(currentChunk);
+            return chunks;
+        }
+
+        // 播放下一段文本
+        function playNextChunk(button) {
+            if (currentIndex >= speechQueue.length || isPaused) {
+                if (currentIndex >= speechQueue.length) {
+                    button.textContent = '🔊';
+                    currentSpeech = null;
+                    currentButton = null;
+                    isPaused = false;
+                    speechQueue = [];
+                    currentIndex = 0;
+                }
+                return;
+            }
+
+            const speech = new SpeechSynthesisUtterance(speechQueue[currentIndex]);
+            speech.lang = 'zh-CN';
+            speech.rate = 1;
+            speech.pitch = 1;
+            speech.volume = 1;
+
+            speech.onend = () => {
+                currentIndex++;
+                playNextChunk(button);
+            };
+
+            speech.onerror = (event) => {
+                console.error('语音合成错误:', event);
+                button.textContent = '🔊';
+            };
+
+            currentSpeech = speech;
+            window.speechSynthesis.speak(speech);
+            button.textContent = '⏸️';
+        }
+
+        // 页面可见性改变时的处理
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden && currentSpeech && !isPaused) {
+                // 页面隐藏时自动暂停
+                window.speechSynthesis.pause();
+                if (currentButton) currentButton.textContent = '▶️';
+                isPaused = true;
+            }
+        });
+
+        // 定期检查语音状态，防止意外中断
+        setInterval(() => {
+            if (currentSpeech && !isPaused && !window.speechSynthesis.speaking) {
+                playNextChunk(currentButton);
+            }
+        }, 250);
+
+        function appendMessage(sender, text, className) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${className}`;
+            
+            let formattedText = text
+                .replace(/^####(.+)$/gm, '<span style="font-size: 1.4em; font-weight: bold;">$1</span>')
+                .replace(/^###(.+)$/gm, '<span style="font-size: 1.4em; font-weight: bold;">$1</span>')
+                .replace(/\*\*(.+?)\*\*/g, '<span style="font-size: 1.2em; font-weight: bold;">$1</span>');
+            
+            if (className === 'agent-message') {
+                messageDiv.innerHTML = `
+                    <div class="message-content">
+                        <div class="message-text">${sender}: <pre style="margin: 0; white-space: pre-wrap; font-family: inherit;">${formattedText}</pre></div>
+                        <button class="voice-button" onclick="playText('${text.replace(/'/g, "\\'")}', this)" title="点击播放/暂停">🔊</button>
+                    </div>`;
+            } else {
+                messageDiv.innerHTML = `
+                    <div class="message-content">
+                        <div class="message-text">${sender}: <pre style="margin: 0; white-space: pre-wrap; font-family: inherit;">${formattedText}</pre></div>
+                    </div>`;
+            }
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // 支持按回车发送消息
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // 从localStorage加载成就
+        let achievements = JSON.parse(localStorage.getItem('achievements')) || [];
+
+        // 初始化显示成就
+        function initAchievements() {
+            const achievementList = document.getElementById('achievementList');
+            achievementList.innerHTML = '';
+            achievements.forEach((achievement, index) => {
+                const achievementDiv = createAchievementElement(achievement, index);
+                achievementList.appendChild(achievementDiv);
+            });
+        }
+
+        // 创建成就元素
+        function createAchievementElement(achievement, index) {
+            const div = document.createElement('div');
+            div.className = 'achievement-item';
+            div.innerHTML = `
+                <img src="https://example.com/star.png" alt="成就" class="achievement-icon">
+                <div>
+                    <div>${achievement.text}</div>
+                    <div class="achievement-date">${achievement.date}</div>
+                </div>
+                <button class="delete-btn" onclick="deleteAchievement(${index})">删除</button>
+            `;
+            return div;
+        }
+
+        // 添加新成就
+        function addAchievement() {
+            const input = document.getElementById('achievementInput');
+            const text = input.value.trim();
+            
+            if (text) {
+                const achievement = {
+                    text: text,
+                    date: new Date().toLocaleDateString('zh-CN'),
+                    time: Date.now()
+                };
+                
+                achievements.unshift(achievement); // 添加到开头
+                localStorage.setItem('achievements', JSON.stringify(achievements));
+                
+                const achievementList = document.getElementById('achievementList');
+                const achievementDiv = createAchievementElement(achievement, 0);
+                achievementList.insertBefore(achievementDiv, achievementList.firstChild);
+                
+                input.value = '';
+                
+                // 添加动画效果
+                achievementDiv.style.animation = 'bounceIn 0.5s ease-in-out';
+            }
+        }
+
+        // 删除成就
+        function deleteAchievement(index) {
+            achievements.splice(index, 1);
+            localStorage.setItem('achievements', JSON.stringify(achievements));
+            initAchievements();
+        }
+
+        // 页面加载时初始化成就墙
+        window.addEventListener('load', initAchievements);
+
+        // 支持按回车添加成就
+        document.getElementById('achievementInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                addAchievement();
+            }
+        });
+
+        function changeMood() {
+            const moodSelect = document.getElementById('moodSelect');
+            const selectedMood = moodSelect.value;
+            // 可以将选择的心情保存到 localStorage
+            localStorage.setItem('currentMood', selectedMood);
+        }
+
+        // 页面加载时恢复上次选择的心情
+        window.addEventListener('load', () => {
+            const savedMood = localStorage.getItem('currentMood');
+            if (savedMood) {
+                document.getElementById('moodSelect').value = savedMood;
+            }
+        });
+
+        function updateDateTime() {
+            const now = new Date();
+            const timeElement = document.getElementById('currentTime');
+            const dateElement = document.getElementById('fullDate');
+            const weekdayElement = document.getElementById('weekday');
+            
+            // 更新时间 (HH:MM:SS)
+            timeElement.textContent = now.toLocaleTimeString('zh-CN');
+            
+            // 更新日期 (YYYY年MM月DD日)
+            dateElement.textContent = now.toLocaleDateString('zh-CN', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            
+            // 更新星期
+            weekdayElement.textContent = now.toLocaleDateString('zh-CN', { weekday: 'long' });
+        }
+
+        // 初始更新
+        updateDateTime();
+
+        // 每秒更新一次
+        setInterval(updateDateTime, 1000);
+
+        document.getElementById('imageUpload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    // 创建新的照片项
+                    const newMoment = document.createElement('div');
+                    newMoment.className = 'moment-item';
+                    
+                    // 设置默认标题
+                    const title = prompt('请输入这张照片的标题：') || '开心时刻';
+                    
+                    newMoment.innerHTML = `
+                        <img src="${e.target.result}" alt="开心时刻">
+                        <p contenteditable="true" class="moment-title">${title}</p>
+                    `;
+                    
+                    // 插入到上传按钮后面
+                    const uploadItem = document.querySelector('.upload-item');
+                    uploadItem.parentNode.insertBefore(newMoment, uploadItem.nextSibling);
+                    
+                    // 为新添加的标题添加编辑功能
+                    const newTitle = newMoment.querySelector('.moment-title');
+                    addTitleEditability(newTitle);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // 为所有标题添加编辑功能
+        function addTitleEditability(titleElement) {
+            titleElement.addEventListener('blur', function() {
+                if (this.textContent.trim() === '') {
+                    this.textContent = '开心时刻';
+                }
+            });
+            
+            titleElement.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    this.blur();
+                }
+            });
+        }
+
+        // 为现有的标题添加编辑功能
+        document.querySelectorAll('.moment-title').forEach(addTitleEditability);
+
+        const themeToggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
+
+        // 检查本地存储中的主题设置
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+            html.setAttribute('data-theme', savedTheme);
+            themeToggle.checked = savedTheme === 'dark';
+        }
+
+        // 切换主题
+        themeToggle.addEventListener('change', function() {
+            if (this.checked) {
+                html.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+                document.querySelector('.theme-label').textContent = '🌙';
+            } else {
+                html.setAttribute('data-theme', 'light');
+                localStorage.setItem('theme', 'light');
+                document.querySelector('.theme-label').textContent = '☀️';
+            }
+        });
+
+        // 根据系统主题自动设置
+        if (!savedTheme) {
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (prefersDark) {
+                html.setAttribute('data-theme', 'dark');
+                themeToggle.checked = true;
+            }
+        }
+
+        const leftToggle = document.getElementById('leftToggle');
+        const rightToggle = document.getElementById('rightToggle');
+        const leftPanel = document.querySelector('.left-panel');
+        const rightPanel = document.querySelector('.right-panel');
+        const overlay = document.getElementById('overlay');
+
+        // 关闭所有面板的函数
+        function closeAllPanels() {
+            leftPanel.classList.remove('show');
+            rightPanel.classList.remove('show');
+            overlay.classList.remove('show');
+        }
+
+        // 切换面板的函数
+        function togglePanel(panel) {
+            const isShow = panel.classList.contains('show');
+            
+            // 先关闭所有面板
+            closeAllPanels();
+            
+            // 如果当前面板未显示，则显示它
+            if (!isShow) {
+                panel.classList.add('show');
+                overlay.classList.add('show');
+            }
+        }
+
+        // 添加事件监听器
+        leftToggle.addEventListener('click', () => togglePanel(leftPanel));
+        rightToggle.addEventListener('click', () => togglePanel(rightPanel));
+
+        // 点击遮罩层关闭面板
+        overlay.addEventListener('click', closeAllPanels);
+
+        // 监听触摸滑动事件，实现滑动关闭面板
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        document.addEventListener('touchstart', e => {
+            touchStartX = e.touches[0].clientX;
+        });
+
+        document.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].clientX;
+            const deltaX = touchEndX - touchStartX;
+            
+            // 如果是左面板且向左滑动
+            if (leftPanel.classList.contains('show') && deltaX < -50) {
+                closeAllPanels();
+            }
+            // 如果是右面板且向右滑动
+            if (rightPanel.classList.contains('show') && deltaX > 50) {
+                closeAllPanels();
+            }
+        });
+
+        // 监听窗口大小变化，在大屏幕时重置面板状态
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 768) {
+                leftPanel.classList.remove('show');
+                rightPanel.classList.remove('show');
+                overlay.classList.remove('show');
+            }
+        });
+
+        // 页面卸载时清理语音
+        window.addEventListener('beforeunload', () => {
+            if (currentSpeech) {
+                window.speechSynthesis.cancel();
+            }
+        });
+    </script>
+</body>
+</html>
