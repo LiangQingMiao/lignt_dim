@@ -21,7 +21,7 @@ async def main():
     # 启动 WebSocket 服务器
     server = await websockets.serve(
         websocket_handler,
-        "localhost",
+        "192.168.5.12",
         8765,
         ping_interval=None  # 可选：禁用自动ping以减少网络流量
     )
