@@ -87,6 +87,26 @@
             box-shadow: 0 4px 15px rgba(168, 230, 207, 0.2);
         }
 
+        .system-message {
+            background: linear-gradient(135deg, #74B9FF, #0984E3);
+            color: white;
+            margin: 10px auto;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(116, 185, 255, 0.2);
+            text-align: center;
+            font-style: italic;
+        }
+
+        .error-message {
+            background: linear-gradient(135deg, #FD79A8, #E84393);
+            color: white;
+            margin: 10px auto;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(253, 121, 168, 0.2);
+            text-align: center;
+            font-weight: bold;
+        }
+
         .input-area {
             display: flex;
             gap: 15px;
@@ -981,28 +1001,55 @@
     </div>
 
     <script>
-        const ws = new WebSocket('ws://192.168.5.12:8765'); // 根据你的WebSocket服务器地址修改
+        const ws = new WebSocket('ws://127.0.0.1:8765');
         const chatMessages = document.getElementById('chatMessages');
         const messageInput = document.getElementById('messageInput');
 
         ws.onopen = () => {
-            appendMessage('你的好朋友小光', '上线啦！', 'agent-message');
+            appendMessage('系统', '正在连接服务器...', 'system-message');
         };
 
         ws.onmessage = (event) => {
-            appendMessage('小光', event.data, 'agent-message');
+            try {
+                const data = JSON.parse(event.data);
+                
+                switch(data.type) {
+                    case 'system':
+                        appendMessage('系统', data.message, 'system-message');
+                        break;
+                    case 'response':
+                        appendMessage('小光', data.message, 'agent-message');
+                        break;
+                    case 'error':
+                        appendMessage('系统', data.message, 'error-message');
+                        break;
+                    default:
+                        // 兼容旧格式的纯文本消息
+                        appendMessage('小光', event.data, 'agent-message');
+                }
+            } catch (error) {
+                // 如果解析JSON失败，按纯文本处理（兼容旧格式）
+                appendMessage('小光', event.data, 'agent-message');
+            }
         };
 
         ws.onclose = () => {
-            appendMessage('你的好朋友小光', '下线了~', 'agent-message');
+            appendMessage('系统', '连接已断开', 'system-message');
+        };
+
+        ws.onerror = (error) => {
+            appendMessage('系统', '连接错误，请检查服务器状态', 'error-message');
+            console.error('WebSocket错误:', error);
         };
 
         function sendMessage() {
             const message = messageInput.value.trim();
-            if (message) {
+            if (message && ws.readyState === WebSocket.OPEN) {
                 ws.send(message);
                 appendMessage('我', message, 'user-message');
                 messageInput.value = '';
+            } else if (ws.readyState !== WebSocket.OPEN) {
+                appendMessage('系统', '连接已断开，无法发送消息', 'error-message');
             }
         }
 
